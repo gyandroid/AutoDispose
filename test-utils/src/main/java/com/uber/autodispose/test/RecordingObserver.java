@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.uber.autodispose.android;
+package com.uber.autodispose.test;
 
 import com.google.common.truth.Platform;
 import io.reactivex.CompletableObserver;
@@ -31,37 +31,40 @@ import static com.google.common.truth.Truth.assertThat;
 
 public final class RecordingObserver<T>
     implements Observer<T>, SingleObserver<T>, MaybeObserver<T>, CompletableObserver {
-  private static final String TAG = "RecordingObserver";
+
+  public interface Logger {
+    void log(String message);
+  }
 
   private final BlockingDeque<Object> events = new LinkedBlockingDeque<>();
+  private final Logger logger;
 
-  @Override
-  public void onError(Throwable e) {
-    System.out.println(TAG + ": onError - " + e);
+  public RecordingObserver(Logger logger) {
+    this.logger = logger;
+  }
+
+  @Override public void onError(Throwable e) {
+    logger.log("onError - " + e);
     events.addLast(new OnError(e));
   }
 
-  @Override
-  public void onComplete() {
-    System.out.println(TAG + ": onCompleted");
+  @Override public void onComplete() {
+    logger.log("onCompleted");
     events.addLast(new OnCompleted());
   }
 
-  @Override
-  public void onSubscribe(Disposable d) {
-    System.out.println(TAG + ": onSubscribe");
+  @Override public void onSubscribe(Disposable d) {
+    logger.log("onSubscribe");
     events.addLast(new OnSubscribe(d));
   }
 
-  @Override
-  public void onSuccess(T value) {
-    System.out.println(TAG + ": onSuccess - " + value);
+  @Override public void onSuccess(T value) {
+    logger.log("onSuccess - " + value);
     events.addLast(new OnSuccess(value));
   }
 
-  @Override
-  public void onNext(T t) {
-    System.out.println(TAG + ": onNext - " + t);
+  @Override public void onNext(T t) {
+    logger.log("onNext - " + t);
     events.addLast(new OnNext(t));
   }
 
@@ -73,8 +76,8 @@ public final class RecordingObserver<T>
       throw new RuntimeException(e);
     }
     if (event == null) {
-      throw new NoSuchElementException("No event found while waiting for "
-          + wanted.getSimpleName());
+      throw new NoSuchElementException(
+          "No event found while waiting for " + wanted.getSimpleName());
     }
     assertThat(event).isInstanceOf(wanted);
     return wanted.cast(event);
@@ -127,15 +130,13 @@ public final class RecordingObserver<T>
       this.value = value;
     }
 
-    @Override
-    public String toString() {
+    @Override public String toString() {
       return "OnNext[" + value + "]";
     }
   }
 
   private static final class OnCompleted {
-    @Override
-    public String toString() {
+    @Override public String toString() {
       return "OnCompleted";
     }
   }
@@ -147,8 +148,7 @@ public final class RecordingObserver<T>
       this.throwable = throwable;
     }
 
-    @Override
-    public String toString() {
+    @Override public String toString() {
       return "OnError[" + throwable + "]";
     }
   }
@@ -160,9 +160,8 @@ public final class RecordingObserver<T>
       this.disposable = disposable;
     }
 
-    @Override
-    public String toString() {
-      return "OnSubscribe[" + disposable + "]";
+    @Override public String toString() {
+      return "OnSubscribe";
     }
   }
 
@@ -173,8 +172,7 @@ public final class RecordingObserver<T>
       this.value = value;
     }
 
-    @Override
-    public String toString() {
+    @Override public String toString() {
       return "OnSuccess[" + value + "]";
     }
   }
