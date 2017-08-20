@@ -127,7 +127,7 @@ public final class RecordingObserver<T>
     }
   }
 
-  private final class OnCompleted {
+  private static final class OnCompleted {
     @Override public String toString() {
       return "OnCompleted";
     }
@@ -145,7 +145,7 @@ public final class RecordingObserver<T>
     }
   }
 
-  private final class OnSubscribe {
+  private static final class OnSubscribe {
     private final Disposable disposable;
 
     private OnSubscribe(Disposable disposable) {
